@@ -1,0 +1,6 @@
+go 1.19
+
+use (
+	/home/sylvain/GITHUB/PUBLIC/calcdate
+    /home/sylvain/GITHUB/PUBLIC/gitlab-stats
+)
