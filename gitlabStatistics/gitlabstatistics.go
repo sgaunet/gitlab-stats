@@ -85,12 +85,6 @@ func AppendStatsToFile(r Record) error {
 		return err
 	}
 
-	f, err := os.OpenFile(DBFileName(), os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	var records structDBFile
 	if len(db) != 0 {
 		err = json.Unmarshal(db, &records)
@@ -100,11 +94,18 @@ func AppendStatsToFile(r Record) error {
 	}
 
 	records.Records = append(records.Records, r)
-
 	newDB, err := json.Marshal(records)
 	if err != nil {
 		return err
 	}
+
+	os.Remove(DBFileName())
+
+	f, err := os.OpenFile(DBFileName(), os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	_, err = f.Write(newDB)
 	return err
 }
