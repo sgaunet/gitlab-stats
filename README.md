@@ -11,13 +11,13 @@ Actually, the stats are saved in $HOME/.gitlab-stats/db.json.
 To register stats, you need to add cron, for example: 
 
 ```
-00 00 * * * GITLAB_TOKEN=.... /home/sylvain/.bin/gitlab-stats -g <groupID>   # comment
+00 00 * * * GITLAB_TOKEN=.... /usr/local/bin/gitlab-stats -g <groupID>   # comment
 ```
 
 To generate the screenshot, you can also add a cron or execute it in the command line. Example of a cron:
 
 ```
-00 00 1 * * /home/sylvain/.bin/gitlab-stats -g <groupID> -o stats-`date "+%Y-%m" -d "1 day ago"`.png
+00 00 1 * * /usr/local/bin/gitlab-stats -g <groupID> -o stats-`date "+%Y-%m" -d "1 day ago"`.png
 ```
 
 
