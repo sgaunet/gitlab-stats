@@ -33,6 +33,8 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.Record) error 
 		closedDuringPeriod,
 		velocity,
 	}
+	charts.SetDefaultHeight(600)
+	charts.SetDefaultWidth(1200)
 	p, err := charts.LineRender(
 		values,
 		// charts.TitleTextOptionFunc("Line"),
