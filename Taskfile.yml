@@ -3,18 +3,26 @@ version: '3'
 vars:
   BINFILE: gitlab-stats
 
+dotenv: ['.env']
+
+includes:
+  dev: ./Taskfile_dev.yml
+
 tasks:
   default:
     cmds:
-      - go mod download
+      - go get
       - CGO_ENABLED=0 go build .
-      - upx ./{{.BINFILE}}
-    # silent: true
-    sources:
-    - ./**/*
-    method: checksum
-    generates:
-      - "{{.BINFILE}}"
+
+  test:
+    # dir: gowork
+    cmds:
+      - test -d tests || mkdir tests
+      - rm -f /tmp/db.json 
+      - go run cmd/gendb4tests/*go -p 1
+      - go run cmd/gitlab-stats/*go -p 1 -o tests/stats-project-1.png -db /tmp/db.json
+      - go run cmd/gendb4tests/*go -g 10
+      - go run cmd/gitlab-stats/*go -g 10 -o tests/stats-project-10.png -db /tmp/db.json
 
   snapshot:
     cmds:

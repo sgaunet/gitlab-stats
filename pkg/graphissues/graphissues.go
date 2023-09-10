@@ -1,16 +1,15 @@
 package graphissues
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/gitlabStatistics"
+	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
 
 	charts "github.com/vicanso/go-charts/v2"
 )
 
-func CreateGraph(graphFilePath string, records []gitlabstatistics.Record) error {
+func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileRecord) error {
 	var totalOpened []float64
 	var openedInThePeriod []float64
 	var closedDuringPeriod []float64
@@ -66,7 +65,7 @@ func writeFile(filename string, buf []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filename, buf, 0644)
+	err = os.WriteFile(filename, buf, 0644)
 	if err != nil {
 		return err
 	}

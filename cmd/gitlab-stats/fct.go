@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 
-	"github.com/sgaunet/gitlab-stats/gitlabRequest"
+	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
 )
 
 type project struct {
@@ -25,11 +26,18 @@ func findProject(remoteOrigin string) (project, error) {
 	projectName = strings.ReplaceAll(projectName, ".git", "")
 	log.Infof("Try to find project %s in %s\n", projectName, os.Getenv("GITLAB_URI"))
 
-	_, res, err := gitlabRequest.Request("search?scope=projects&search=" + projectName)
+	gs := gitlab.NewService()
+	gs.SetGitlabEndpoint(os.Getenv("GITLAB_URI"))
+
+	resp, err := gs.Get("search?scope=projects&search=" + projectName)
 	if err != nil {
-		log.Errorln(err.Error())
-		os.Exit(1)
+		return project{}, err
 	}
+	res, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return project{}, err
+	}
+	defer resp.Body.Close()
 
 	var p []project
 	err = json.Unmarshal(res, &p)

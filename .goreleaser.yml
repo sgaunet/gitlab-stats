@@ -20,7 +20,7 @@ builds:
     goarm:
       - "6"
       - "7"
-    # dir: src
+    dir: cmd/gitlab-stats
     id: lin
 
 archives:
@@ -121,9 +121,15 @@ brews:
     commit_author:
       name: sgaunet
       email: sgaunet@gmail.com
-    tap:
+    repository:
       owner: sgaunet
       name: homebrew-tools
+    # Custom install script for brew.
+    #
+    # Template: allowed
+    # Default: 'bin.install "BinaryName"'
+    install: |
+      bin.install "gitlab-stats"
 
 changelog:
   sort: asc

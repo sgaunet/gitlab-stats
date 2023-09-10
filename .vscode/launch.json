@@ -5,15 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch file",
+            "name": "project",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/",
+            "program": "${workspaceFolder}/cmd/gitlab-stats",
             // "env": {
             //     "KUBECONFIG": "/home/sylvain/.kube/kubeconfig-admin@DEV"
             // },
-            "args": ["-g" ,"xxxxxx","-o","/tmp/stat.png" ]
+            "args": ["-p" ,"1","-db","/tmp/db.json","-o","/tmp/stat.png" ]
+        },
+        {
+            "name": "group",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/gitlab-stats",
+            // "env": {
+            //     "KUBECONFIG": "/home/sylvain/.kube/kubeconfig-admin@DEV"
+            // },
+            "args": ["-g" ,"10","-db","/tmp/db.json","-o","/tmp/stat.png" ]
         }
     ]
 }

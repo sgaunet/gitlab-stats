@@ -39,6 +39,38 @@ Usage of gitlab-stats:
   -v    Get version
 ```
 
-# Future
+# Development
 
-This tool has been created quickly. It should be refactored but I'm not sure to spend additional time to this project. The goal is achieved from my point of view. We will see... PR are welcomed.
+## prerequisites
+
+This project is using :
+
+* golang
+* [task for development](https://taskfile.dev/#/)
+* [goreleaser](https://goreleaser.com/)
+* [pre-commit](https://pre-commit.com/)
+
+There are hooks executed in the precommit stage. Once the project cloned on your disk, please install pre-commit:
+
+```
+brew install pre-commit
+```
+
+Install tools:
+
+```
+task install-prereq
+```
+
+And install the hooks:
+
+```
+task install-pre-commit
+```
+
+If you like to launch manually the pre-commmit hook:
+
+```
+task pre-commit
+```
+

@@ -1,6 +1,6 @@
 package gitlabstatistics
 
-func FilterWithProject(r []Record, projectID int) (res []Record) {
+func FilterWithProject(r []DatabaseBFileRecord, projectID int) (res []DatabaseBFileRecord) {
 	for idx := range r {
 		if r[idx].ProjectID == projectID {
 			res = append(res, r[idx])
@@ -9,7 +9,7 @@ func FilterWithProject(r []Record, projectID int) (res []Record) {
 	return
 }
 
-func FilterWithGroup(r []Record, groupID int) (res []Record) {
+func FilterWithGroup(r []DatabaseBFileRecord, groupID int) (res []DatabaseBFileRecord) {
 	for idx := range r {
 		if r[idx].GroupID == groupID {
 			res = append(res, r[idx])

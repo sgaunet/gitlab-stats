@@ -11,16 +11,16 @@ type Statistic struct {
 }
 
 type Counts struct {
-	All    int `json:"all"`
-	Closed int `json:"closed"`
-	Opened int `json:"opened"`
+	All    int `json:"all,omitempty"`
+	Closed int `json:"closed,omitempty"`
+	Opened int `json:"opened,omitempty"`
 }
 
-type structDBFile struct {
-	Records []Record
+type DatabaseBFile struct {
+	Records []DatabaseBFileRecord
 }
 
-type Record struct {
+type DatabaseBFileRecord struct {
 	DateExec  time.Time `json:"dateExec"`
 	ProjectID int       `json:"projectId"`
 	GroupID   int       `json:"groupId"`

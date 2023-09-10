@@ -6,8 +6,9 @@ import (
 	"os"
 	"time"
 
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/gitlabStatistics"
-	"github.com/sgaunet/gitlab-stats/graphissues"
+	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
+	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
+	"github.com/sgaunet/gitlab-stats/pkg/graphissues"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,11 +25,13 @@ func main() {
 		groupId       int
 		vOption       bool
 		graphFilePath string
+		dbFile        string
 		sinceMonth    int
 	)
 	// Parameters treatment (except src + dest)
 	flag.StringVar(&graphFilePath, "o", "", "file path to generate statistic graph (do not fullfill DB)")
 	flag.StringVar(&debugLevel, "d", "error", "Debug level (info,warn,debug)")
+	flag.StringVar(&dbFile, "db", "", "DB file (default $HOME/.gitlab-stats/db.json))")
 	flag.BoolVar(&vOption, "v", false, "Get version")
 	flag.IntVar(&projectId, "p", 0, "Project ID to get issues from")
 	flag.IntVar(&groupId, "g", 0, "Group ID to get issues from (not compatible with -p option)")
@@ -79,7 +82,8 @@ func main() {
 		projectId = project.Id
 	}
 
-	n := gitlabstatistics.NewRequestStatistics()
+	gs := gitlab.NewService()
+	n := gitlabstatistics.NewServiceStatistics()
 	if projectId != 0 {
 		n.SetProjectId(projectId)
 	}
@@ -87,9 +91,10 @@ func main() {
 		n.SetGroupId(groupId)
 	}
 
+	dbStats := gitlabstatistics.NewDBStats(dbFile)
 	if graphFilePath != "" {
 		logrus.Infoln("retrieve stats from file")
-		r, err := gitlabstatistics.GetLastMonthStatsFromFile(sinceMonth)
+		r, err := dbStats.GetLastMonthStatsFromFile(sinceMonth)
 		if err != nil {
 			logrus.Errorln("error when retrieving data: ", err.Error())
 			os.Exit(1)
@@ -106,18 +111,19 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		statistics, err := n.GetStatistics()
+		statistics, err := n.GetStatistics(gs)
 		if err != nil {
 			logrus.Errorln(err.Error())
 			os.Exit(1)
 		}
-		newRecord := gitlabstatistics.Record{
+		newRecord := gitlabstatistics.DatabaseBFileRecord{
 			DateExec:  time.Now(),
 			Counts:    statistics.Statistics.Counts,
 			GroupID:   groupId,
 			ProjectID: projectId,
 		}
-		err = gitlabstatistics.AppendStatsToFile(newRecord)
+
+		err = dbStats.AddStats(newRecord)
 		if err != nil {
 			logrus.Errorln(err.Error())
 			os.Exit(1)
