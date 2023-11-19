@@ -13,7 +13,6 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileR
 	var totalOpened []float64
 	var openedInThePeriod []float64
 	var closedDuringPeriod []float64
-	var velocity []float64
 	var labels []string
 
 	for r := range records {
@@ -21,7 +20,6 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileR
 			totalOpened = append(totalOpened, float64(records[r].Counts.Opened))
 			openedInThePeriod = append(openedInThePeriod, float64(records[r].Counts.Opened-records[r-1].Counts.Opened))
 			closedDuringPeriod = append(closedDuringPeriod, float64(records[r].Counts.Closed-records[r-1].Counts.Closed))
-			velocity = append(velocity, (float64(records[r].Counts.Closed-records[r-1].Counts.Closed))-float64(records[r].Counts.Opened-records[r-1].Counts.Opened))
 			labels = append(labels, records[r].DateExec.Format("2006-01"))
 		}
 	}
@@ -30,7 +28,6 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileR
 		totalOpened,
 		openedInThePeriod,
 		closedDuringPeriod,
-		velocity,
 	}
 	charts.SetDefaultHeight(600)
 	charts.SetDefaultWidth(1200)
@@ -42,7 +39,6 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileR
 			"Total Opened",
 			"Opened during period",
 			"Closed during period",
-			"velocity",
 		}, charts.PositionCenter),
 	)
 
