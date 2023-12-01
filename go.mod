@@ -3,7 +3,7 @@ module github.com/sgaunet/gitlab-stats
 go 1.19
 
 require (
-	github.com/golang-module/carbon/v2 v2.2.13
+	github.com/golang-module/carbon/v2 v2.2.14
 	github.com/google/go-cmp v0.6.0
 	github.com/sgaunet/calcdate v1.4.3
 	github.com/sirupsen/logrus v1.9.3
