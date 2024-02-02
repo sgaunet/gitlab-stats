@@ -7,18 +7,18 @@ before:
     #- go generate ./...
 builds:
   - env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     ldflags:
       - -X main.version={{.Version}}
     goos:
       - linux
-      - darwin
+      # - darwin
     goarch:
       - amd64
-      - arm
-      - arm64
+      # - arm
+      # - arm64
     goarm:
-      - "6"
+      # - "6"
       - "7"
     dir: cmd/gitlab-stats
     id: lin
@@ -114,22 +114,6 @@ snapshot:
 #       - sgaunet/{{ .ProjectName }}:latest-arm64v8
 #       - sgaunet/{{ .ProjectName }}:latest-armv6
 #       - sgaunet/{{ .ProjectName }}:latest-armv7
-
-brews:
-  - homepage: 'https://github.com/sgaunet/homebrew-tools'
-    folder: Formula
-    commit_author:
-      name: sgaunet
-      email: sgaunet@gmail.com
-    repository:
-      owner: sgaunet
-      name: homebrew-tools
-    # Custom install script for brew.
-    #
-    # Template: allowed
-    # Default: 'bin.install "BinaryName"'
-    install: |
-      bin.install "gitlab-stats"
 
 changelog:
   sort: asc

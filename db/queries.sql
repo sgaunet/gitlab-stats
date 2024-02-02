@@ -1,0 +1,64 @@
+-- name: InsertNewStats :one
+INSERT INTO stats (total,closed,opened,date_exec)
+VALUES(?,?,?,?)
+RETURNING id;
+
+-- name: InsertStatsProjects :one
+INSERT INTO stats_projects (projectId,statsId)
+VALUES(?,?)
+RETURNING id;
+
+-- name: InsertStatsGroups :one
+INSERT INTO stats_groups (groupId,statsId)
+VALUES(?,?)
+RETURNING id;
+
+-- name: GetProject :one
+SELECT id,project_name FROM projects WHERE id=?;
+
+-- name: GetGroup :one
+SELECT id,group_name FROM groups WHERE id=?;
+
+-- name: InsertNewProject :one
+INSERT INTO projects (id,project_name)
+VALUES(?,?)
+RETURNING id;
+
+-- name: InsertNewGroup :one
+INSERT INTO groups (id,group_name)
+VALUES(?,?)
+RETURNING id;
+
+-- name: GetStatsOfProject :many
+SELECT id,total,closed,opened,date_exec FROM stats
+WHERE id IN (SELECT statsId FROM stats_projects WHERE projectId=?)
+ORDER BY date_exec DESC;
+
+-- name: GetStatsOfGroup :many
+SELECT id,total,closed,opened,date_exec FROM stats
+WHERE id IN (SELECT statsId FROM stats_groups WHERE groupId=?)
+ORDER BY date_exec DESC;
+
+-- name: GetStatsByProjectID6Months :many
+SELECT id,total,closed,opened,date_exec
+FROM (
+  SELECT id,total,closed,opened,date_exec,
+    ROW_NUMBER() OVER(PARTITION BY strftime('%Y-%m', date_exec) ORDER BY date_exec DESC) as rn
+  FROM stats
+) t
+WHERE 
+  rn = 1 AND date_exec >= date('now', '-6 month')
+  AND id IN (SELECT statsId FROM stats_projects WHERE projectId=?)
+order by date_exec;
+
+-- name: GetStatsByGroupID6Months :many
+SELECT id,total,closed,opened,date_exec
+FROM (
+  SELECT id,total,closed,opened,date_exec,
+    ROW_NUMBER() OVER(PARTITION BY strftime('%Y-%m', date_exec) ORDER BY date_exec DESC) as rn
+  FROM stats
+) t
+WHERE 
+  rn = 1 AND date_exec >= date('now', '-6 month')
+  AND id IN (SELECT statsId FROM stats_groups WHERE groupId=?)
+order by date_exec;

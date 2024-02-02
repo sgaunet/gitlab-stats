@@ -1,4 +1,4 @@
-package gitlabstatistics_test
+package gitlab_test
 
 import (
 	"encoding/json"
@@ -9,13 +9,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
 )
 
 func TestGetStatisticsGoodResponse(t *testing.T) {
-	response := gitlabstatistics.Statistics{
-		Statistics: gitlabstatistics.Statistic{
-			Counts: gitlabstatistics.Counts{
+	response := gitlab.Statistics{
+		Statistics: gitlab.Statistic{
+			Counts: gitlab.Counts{
 				All:    1,
 				Closed: 1,
 				Opened: 1,
@@ -36,8 +35,7 @@ func TestGetStatisticsGoodResponse(t *testing.T) {
 	s.SetHttpClient(client)
 	s.SetGitlabEndpoint(ts.URL)
 
-	r := gitlabstatistics.NewServiceStatistics()
-	r.SetProjectId(1)
+	r := gitlab.NewProjectStatistics(1)
 	res, err := r.GetStatistics(s)
 	if err != nil {
 		t.Errorf("GetStatistics() error = %v", err)
@@ -69,8 +67,7 @@ func TestGetStatisticsWrongResponse(t *testing.T) {
 	s.SetHttpClient(client)
 	s.SetGitlabEndpoint(ts.URL)
 
-	r := gitlabstatistics.NewServiceStatistics()
-	r.SetProjectId(1)
+	r := gitlab.NewProjectStatistics(1)
 	_, err := r.GetStatistics(s)
 	if err == nil {
 		t.Errorf("GetStatistics() should return an error")

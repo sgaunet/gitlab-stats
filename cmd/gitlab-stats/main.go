@@ -4,11 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
 	"github.com/sgaunet/gitlab-stats/pkg/graphissues"
+	"github.com/sgaunet/gitlab-stats/pkg/storage/jsonfile"
+	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
+
+	// storage "github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,16 +30,17 @@ func main() {
 		vOption       bool
 		graphFilePath string
 		dbFile        string
-		sinceMonth    int
+		// sinceMonth    int
+		n *gitlab.ServiceStatistics
 	)
 	// Parameters treatment (except src + dest)
 	flag.StringVar(&graphFilePath, "o", "", "file path to generate statistic graph (do not fullfill DB)")
 	flag.StringVar(&debugLevel, "d", "error", "Debug level (info,warn,debug)")
-	flag.StringVar(&dbFile, "db", "", "DB file (default $HOME/.gitlab-stats/db.json))")
+	flag.StringVar(&dbFile, "db", os.Getenv("HOME")+"/.gitlab-stats/db.sqlite3", "DB file (default $HOME/.gitlab-stats/db.sqlite3))")
 	flag.BoolVar(&vOption, "v", false, "Get version")
 	flag.IntVar(&projectId, "p", 0, "Project ID to get issues from")
 	flag.IntVar(&groupId, "g", 0, "Group ID to get issues from (not compatible with -p option)")
-	flag.IntVar(&sinceMonth, "s", 6, "graph last X month")
+	// flag.IntVar(&sinceMonth, "s", 6, "graph last X month")
 	flag.Parse()
 
 	if vOption {
@@ -82,48 +87,79 @@ func main() {
 		projectId = project.Id
 	}
 
-	gs := gitlab.NewService()
-	n := gitlabstatistics.NewServiceStatistics()
-	if projectId != 0 {
-		n.SetProjectId(projectId)
-	}
-	if groupId != 0 {
-		n.SetGroupId(groupId)
-	}
-
-	dbStats := gitlabstatistics.NewDBStats(dbFile)
-	if graphFilePath != "" {
-		logrus.Infoln("retrieve stats from file")
-		r, err := dbStats.GetLastMonthStatsFromFile(sinceMonth)
+	// Check existence of DB file
+	_, err := os.Stat(dbFile)
+	if os.IsNotExist(err) {
+		logrus.Infoln("DB file not found, create it")
+		// migrate DB
+		s, err := sqlite.NewStorage(dbFile)
 		if err != nil {
-			logrus.Errorln("error when retrieving data: ", err.Error())
+			logrus.Errorln(err.Error())
 			os.Exit(1)
 		}
+		err = s.Init()
+		if err != nil {
+			logrus.Errorln(err.Error())
+			os.Exit(1)
+		}
+		defer s.Close()
+		oldDbFile := strings.Replace(dbFile, ".sqlite3", ".json", 1)
+		if _, err := os.Stat(oldDbFile); err == nil {
+			logrus.Infoln("Migrate old DB file")
+			oldJSONDB := jsonfile.NewDBStats(oldDbFile)
+			err = s.MigrateDBFile(oldJSONDB)
+			if err != nil {
+				logrus.Errorln("error when migrating data: ", err.Error())
+				os.Exit(1)
+			}
+		}
+	}
+
+	s, err := sqlite.NewStorage(dbFile)
+	if err != nil {
+		logrus.Errorln(err.Error())
+		os.Exit(1)
+	}
+
+	if graphFilePath != "" {
+		var openedSerie []float64
+		var closedSerie []float64
+		var dateExecSerie []time.Time
+		var err error
+		logrus.Infoln("retrieve stats from file")
 		if projectId != 0 {
-			r = gitlabstatistics.FilterWithProject(r, projectId)
+			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByProjectId6Months(int64(projectId))
+		} else {
+			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByGroupID6Months(int64(groupId))
 		}
-		if groupId != 0 {
-			r = gitlabstatistics.FilterWithGroup(r, groupId)
+		if err != nil {
+			logrus.Errorln("error when retrieving stats: ", err.Error())
+			os.Exit(1)
 		}
-		err = graphissues.CreateGraph(graphFilePath, r)
+		err = graphissues.CreateGraph(graphFilePath, openedSerie, closedSerie, dateExecSerie)
 		if err != nil {
 			logrus.Errorln("error when creating file: ", err.Error())
 			os.Exit(1)
 		}
 	} else {
+		gs := gitlab.NewService()
+		if projectId != 0 {
+			n = gitlab.NewProjectStatistics(projectId)
+		}
+		if groupId != 0 {
+			n = gitlab.NewGroupStatistics(groupId)
+		}
 		statistics, err := n.GetStatistics(gs)
 		if err != nil {
 			logrus.Errorln(err.Error())
 			os.Exit(1)
 		}
-		newRecord := gitlabstatistics.DatabaseBFileRecord{
-			DateExec:  time.Now(),
-			Counts:    statistics.Statistics.Counts,
-			GroupID:   groupId,
-			ProjectID: projectId,
+		if projectId != 0 {
+			err = s.AddProjectStats(int64(projectId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), time.Now())
 		}
-
-		err = dbStats.AddStats(newRecord)
+		if groupId != 0 {
+			err = s.AddGroupStats(int64(groupId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), time.Now())
+		}
 		if err != nil {
 			logrus.Errorln(err.Error())
 			os.Exit(1)

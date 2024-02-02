@@ -1,26 +1,29 @@
 package graphissues
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
-
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
+	"time"
 
 	charts "github.com/vicanso/go-charts/v2"
 )
 
-func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileRecord) error {
+func CreateGraph(graphFilePath string, openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time) error {
 	var totalOpened []float64
 	var openedInThePeriod []float64
 	var closedDuringPeriod []float64
 	var labels []string
 
-	for r := range records {
+	if len(openedSerie) != len(closedSerie) || len(openedSerie) != len(dateExecSerie) {
+		return errors.New("openedSerie, closedSerie and dateExecSerie should have the same length")
+	}
+	for r := range openedSerie {
 		if r != 0 {
-			totalOpened = append(totalOpened, float64(records[r].Counts.Opened))
-			openedInThePeriod = append(openedInThePeriod, float64(records[r].Counts.Opened-records[r-1].Counts.Opened))
-			closedDuringPeriod = append(closedDuringPeriod, float64(records[r].Counts.Closed-records[r-1].Counts.Closed))
-			labels = append(labels, records[r].DateExec.Format("2006-01"))
+			totalOpened = append(totalOpened, float64(openedSerie[r]))
+			openedInThePeriod = append(openedInThePeriod, float64(openedSerie[r]-openedSerie[r-1]))
+			closedDuringPeriod = append(closedDuringPeriod, float64(closedSerie[r]-closedSerie[r-1]))
+			labels = append(labels, dateExecSerie[r].Format("2006-01"))
 		}
 	}
 
@@ -41,17 +44,14 @@ func CreateGraph(graphFilePath string, records []gitlabstatistics.DatabaseBFileR
 			"Closed during period",
 		}, charts.PositionCenter),
 	)
-
 	if err != nil {
 		return err
 	}
-
 	buf, err := p.Bytes()
 	if err != nil {
 		return err
 	}
-	err = writeFile(graphFilePath, buf)
-	return err
+	return writeFile(graphFilePath, buf)
 }
 
 func writeFile(filename string, buf []byte) error {
@@ -60,10 +60,5 @@ func writeFile(filename string, buf []byte) error {
 	if err != nil {
 		return err
 	}
-
-	err = os.WriteFile(filename, buf, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.WriteFile(filename, buf, 0644)
 }

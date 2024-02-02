@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/sgaunet/gitlab-stats)](https://goreportcard.com/report/github.com/sgaunet/gitlab-stats)
+
+
 # gitlab-stats
 
 gitlab-stats is a tool to register stats of gitlab projects/groups. Based on the statistics saved, it can generate a graph to visualize the activity on gitlab projects/groups.
@@ -74,3 +77,6 @@ If you like to launch manually the pre-commmit hook:
 task pre-commit
 ```
 
+
+
+sudo apt install sqlite3 sqlite3-tools

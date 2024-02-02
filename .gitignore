@@ -3,3 +3,4 @@ dist
 /gitlab-stats
 .env
 tests
+/internal/database/*.go

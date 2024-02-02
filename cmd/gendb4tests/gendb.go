@@ -1,15 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/golang-module/carbon/v2"
-	gitlabstatistics "github.com/sgaunet/gitlab-stats/pkg/gitlabStatistics"
+	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 )
 
 func main() {
@@ -19,12 +17,8 @@ func main() {
 
 	flag.IntVar(&projectID, "p", 0, "Project ID to get issues from")
 	flag.IntVar(&groupID, "g", 0, "Group ID to get issues from (not compatible with -p option)")
-	flag.StringVar(&dbFile, "db", "", "DB file (default /tmp/db.json))")
+	flag.StringVar(&dbFile, "db", "/tmp/db.sqlite3", "DB file (default /tmp/db.sqlite3))")
 	flag.Parse()
-
-	if dbFile == "" {
-		dbFile = "/tmp/db.json"
-	}
 
 	if projectID != 0 && groupID != 0 {
 		fmt.Fprintln(os.Stderr, "-p and -g option are incompatible")
@@ -39,7 +33,17 @@ func main() {
 	}
 
 	// For the last 12 months, generate a fake $HOME/.gitlab-stats/db.json file
-	s := gitlabstatistics.DatabaseBFile{}
+	s, err := sqlite.NewStorage(dbFile)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer s.Close()
+	err = s.Init()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 
 	// Generate fake data for the last 12 months
 	dbegin := carbon.Now().SubMonths(12).StartOfMonth()
@@ -59,44 +63,16 @@ func main() {
 		closedIssues += 0 + rand.Intn(10)
 		fmt.Printf("openIssues: %d, closedIssues: %d\n", openIssues, closedIssues)
 		allIssues := openIssues + closedIssues
-		// append a new record
-		s.Records = append(s.Records, gitlabstatistics.DatabaseBFileRecord{
-			DateExec:  dbegin.ToStdTime(),
-			ProjectID: projectID,
-			GroupID:   groupID,
-			Counts: gitlabstatistics.Counts{
-				All:    allIssues,
-				Closed: closedIssues,
-				Opened: openIssues,
-			},
-		})
-	}
-
-	// convert to json
-	dbContent, err := json.Marshal(s)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	err = os.Remove(dbFile)
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
+		// append stats
+		if projectID != 0 {
+			err = s.AddProjectStats(int64(projectID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin.ToStdTime())
+		}
+		if groupID != 0 {
+			err = s.AddGroupStats(int64(groupID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin.ToStdTime())
+		}
+		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
-	}
-
-	// write to file
-	f, err := os.OpenFile(dbFile, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	defer f.Close()
-	_, err = f.Write(dbContent)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
 	}
 }
