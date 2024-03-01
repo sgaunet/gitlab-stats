@@ -3,10 +3,10 @@ module github.com/sgaunet/gitlab-stats
 go 1.19
 
 require (
-	github.com/amacneil/dbmate/v2 v2.8.0
+	github.com/amacneil/dbmate/v2 v2.12.0
 	github.com/golang-module/carbon/v2 v2.2.13
 	github.com/google/go-cmp v0.6.0
-	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/sgaunet/calcdate v1.4.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/vicanso/go-charts/v2 v2.6.3
@@ -20,5 +20,5 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/wcharczuk/go-chart/v2 v2.1.1 // indirect
 	golang.org/x/image v0.14.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 )
