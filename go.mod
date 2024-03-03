@@ -9,7 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/sgaunet/calcdate v1.4.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/vicanso/go-charts/v2 v2.6.3
+	github.com/vicanso/go-charts/v2 v2.6.4
 	gopkg.in/ini.v1 v1.67.0
 )
 
