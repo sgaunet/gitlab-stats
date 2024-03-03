@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/amacneil/dbmate/v2 v2.12.0
-	github.com/golang-module/carbon/v2 v2.2.13
+	github.com/golang-module/carbon/v2 v2.3.9
 	github.com/google/go-cmp v0.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/sgaunet/calcdate v1.4.3
