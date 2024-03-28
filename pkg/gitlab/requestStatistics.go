@@ -47,7 +47,7 @@ func (r *ServiceStatistics) GetStatistics(gs *GitlabService) (result Statistics,
 	// 	return result, err
 	// }
 	decoder := json.NewDecoder(strings.NewReader(string(body)))
-	// decoder.DisallowUnknownFields()
+	decoder.DisallowUnknownFields()
 	err = decoder.Decode(&result)
 	if err != nil {
 		return result, err
