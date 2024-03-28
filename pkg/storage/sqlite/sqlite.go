@@ -12,7 +12,6 @@ import (
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sgaunet/gitlab-stats/internal/database"
-	"github.com/sgaunet/gitlab-stats/pkg/storage/jsonfile"
 )
 
 //go:embed db/migrations/*.sql
@@ -57,30 +56,6 @@ func (s *Storage) Init() error {
 	err = db.CreateAndMigrate()
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func (s *Storage) MigrateDBFile(oldStatsDB *jsonfile.FileRepository) error {
-	// Read olg json file
-	stats, err := oldStatsDB.GetAllRecordsFromDB()
-	if err != nil {
-		return err
-	}
-	for _, record := range stats.Records {
-		// Add record to new DB
-		if record.GroupID != 0 {
-			err = s.AddGroupStats(int64(record.GroupID), int64(record.Counts.Opened), int64(record.Counts.Closed), int64(record.Counts.All), record.DateExec)
-			if err != nil {
-				return err
-			}
-		}
-		if record.ProjectID != 0 {
-			err = s.AddProjectStats(int64(record.ProjectID), int64(record.Counts.Opened), int64(record.Counts.Closed), int64(record.Counts.All), record.DateExec)
-			if err != nil {
-				return err
-			}
-		}
 	}
 	return nil
 }

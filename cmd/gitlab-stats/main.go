@@ -4,12 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
 	"github.com/sgaunet/gitlab-stats/pkg/graphissues"
-	"github.com/sgaunet/gitlab-stats/pkg/storage/jsonfile"
 	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 
 	// storage "github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
@@ -91,7 +89,6 @@ func main() {
 	_, err := os.Stat(dbFile)
 	if os.IsNotExist(err) {
 		logrus.Infoln("DB file not found, create it")
-		// migrate DB
 		s, err := sqlite.NewStorage(dbFile)
 		if err != nil {
 			logrus.Errorln(err.Error())
@@ -102,17 +99,7 @@ func main() {
 			logrus.Errorln(err.Error())
 			os.Exit(1)
 		}
-		defer s.Close()
-		oldDbFile := strings.Replace(dbFile, ".sqlite3", ".json", 1)
-		if _, err := os.Stat(oldDbFile); err == nil {
-			logrus.Infoln("Migrate old DB file")
-			oldJSONDB := jsonfile.NewDBStats(oldDbFile)
-			err = s.MigrateDBFile(oldJSONDB)
-			if err != nil {
-				logrus.Errorln("error when migrating data: ", err.Error())
-				os.Exit(1)
-			}
-		}
+		s.Close()
 	}
 
 	s, err := sqlite.NewStorage(dbFile)

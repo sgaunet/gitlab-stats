@@ -1,6 +1,8 @@
 module github.com/sgaunet/gitlab-stats
 
-go 1.19
+go 1.21
+
+toolchain go1.22.1
 
 require (
 	github.com/amacneil/dbmate/v2 v2.12.0

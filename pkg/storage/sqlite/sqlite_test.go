@@ -6,7 +6,6 @@ import (
 
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/sgaunet/gitlab-stats/pkg/storage/jsonfile"
 	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 )
 
@@ -40,18 +39,4 @@ func TestInit(t *testing.T) {
 	}
 	// delete db file
 	os.Remove("/tmp/db.sqlite3")
-}
-
-func TestMigrate(t *testing.T) {
-	defer os.Remove("/tmp/db.sqlite3")
-	s, _ := sqlite.NewStorage("/tmp/db.sqlite3")
-	err := s.Init()
-	if err != nil {
-		t.Errorf("err returned by Init(): %v", err.Error())
-	}
-	jsonDB := jsonfile.NewDBStats(os.Getenv("HOME") + "/.gitlab-stats/db.json")
-	err = s.MigrateDBFile(jsonDB)
-	if err != nil {
-		t.Errorf("err returned by MigrateDBFile(): %v", err.Error())
-	}
 }
