@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/amacneil/dbmate/v2 v2.12.0
-	github.com/golang-module/carbon/v2 v2.3.9
+	github.com/golang-module/carbon/v2 v2.3.10
 	github.com/google/go-cmp v0.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/sirupsen/logrus v1.9.3
