@@ -10,27 +10,17 @@ import (
 )
 
 func CreateGraph(graphFilePath string, openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time) error {
-	var totalOpened []float64
-	var openedInThePeriod []float64
-	var closedDuringPeriod []float64
 	var labels []string
 
-	if len(openedSerie) != len(closedSerie) || len(openedSerie) != len(dateExecSerie) {
-		return errors.New("openedSerie, closedSerie and dateExecSerie should have the same length")
-	}
 	for r := range openedSerie {
-		if r != 0 {
-			totalOpened = append(totalOpened, float64(openedSerie[r]))
-			openedInThePeriod = append(openedInThePeriod, float64(openedSerie[r]-openedSerie[r-1]))
-			closedDuringPeriod = append(closedDuringPeriod, float64(closedSerie[r]-closedSerie[r-1]))
-			labels = append(labels, dateExecSerie[r].Format("2006-01"))
-		}
+		labels = append(labels, dateExecSerie[r].Format("2006-01"))
+	}
+	if len(openedSerie) != len(closedSerie) || len(openedSerie) != len(dateExecSerie) || len(closedSerie) != len(labels) {
+		return errors.New("openedSerie, closedSerie and dateExecSerie should have the same length")
 	}
 
 	values := [][]float64{
-		totalOpened,
-		openedInThePeriod,
-		closedDuringPeriod,
+		openedSerie,
 	}
 	charts.SetDefaultHeight(600)
 	charts.SetDefaultWidth(1200)
@@ -39,9 +29,8 @@ func CreateGraph(graphFilePath string, openedSerie []float64, closedSerie []floa
 		// charts.TitleTextOptionFunc("Line"),
 		charts.XAxisDataOptionFunc(labels),
 		charts.LegendLabelsOptionFunc([]string{
-			"Total Opened",
-			"Opened during period",
-			"Closed during period",
+			"Opened issues",
+			// "Closed issues",
 		}, charts.PositionCenter),
 	)
 	if err != nil {
