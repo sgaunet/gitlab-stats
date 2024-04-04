@@ -29,8 +29,8 @@ func main() {
 		vOption       bool
 		graphFilePath string
 		dbFile        string
-		// sinceMonth    int
-		n *gitlab.ServiceStatistics
+		sinceMonth    int
+		n             *gitlab.ServiceStatistics
 	)
 	// Parameters treatment (except src + dest)
 	flag.StringVar(&graphFilePath, "o", "", "file path to generate statistic graph (do not fullfill DB)")
@@ -39,12 +39,18 @@ func main() {
 	flag.BoolVar(&vOption, "v", false, "Get version")
 	flag.IntVar(&projectId, "p", 0, "Project ID to get issues from")
 	flag.IntVar(&groupId, "g", 0, "Group ID to get issues from (not compatible with -p option)")
-	// flag.IntVar(&sinceMonth, "s", 6, "graph last X month")
+	flag.IntVar(&sinceMonth, "s", 6, "graph last X month")
 	flag.Parse()
 
 	if vOption {
 		printVersion()
 		os.Exit(0)
+	}
+
+	if sinceMonth < 1 {
+		logrus.Errorf("sinceMonth should be greater than 0\n")
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 
 	if debugLevel != "info" && debugLevel != "error" && debugLevel != "debug" {
@@ -109,7 +115,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	begindate := carbon.CreateFromStdTime(s.Now()).AddMonths(-6).StartOfMonth()
+	begindate := carbon.CreateFromStdTime(s.Now()).AddMonths(-sinceMonth).StartOfMonth()
 	enddate := carbon.CreateFromStdTime(s.Now()).StartOfMonth()
 
 	if graphFilePath != "" {
