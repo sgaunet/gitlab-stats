@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/golang-module/carbon/v2"
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
 	"github.com/sgaunet/gitlab-stats/pkg/graphissues"
 	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
@@ -108,6 +109,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	begindate := carbon.CreateFromStdTime(s.Now()).AddMonths(-6).StartOfMonth()
+	enddate := carbon.CreateFromStdTime(s.Now()).StartOfMonth()
+
 	if graphFilePath != "" {
 		var openedSerie []float64
 		var closedSerie []float64
@@ -115,9 +119,9 @@ func main() {
 		var err error
 		logrus.Infoln("retrieve stats from file")
 		if projectId != 0 {
-			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByProjectId6Months(int64(projectId))
+			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByProjectId6Months(int64(projectId), begindate, enddate)
 		} else {
-			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByGroupID6Months(int64(groupId))
+			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByGroupID6Months(int64(groupId), begindate, enddate)
 		}
 		if err != nil {
 			logrus.Errorln("error when retrieving stats: ", err.Error())

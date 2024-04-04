@@ -45,10 +45,11 @@ FROM (
   SELECT id,total,closed,opened,date_exec,
     ROW_NUMBER() OVER(PARTITION BY strftime('%Y-%m', date_exec) ORDER BY date_exec DESC) as rn
   FROM stats
+  order by date_exec
 ) t
 WHERE 
-  rn = 1 AND date_exec >= date('now', '-6 month')
-  AND id IN (SELECT statsId FROM stats_projects WHERE projectId=?)
+  rn = 2 AND date_exec >= sqlc.arg(begindate) AND date_exec <= sqlc.arg(enddate)
+  AND id IN (SELECT statsId FROM stats_projects WHERE projectId=sqlc.arg(projectId))
 order by date_exec;
 
 -- name: GetStatsByGroupID6Months :many
@@ -57,8 +58,9 @@ FROM (
   SELECT id,total,closed,opened,date_exec,
     ROW_NUMBER() OVER(PARTITION BY strftime('%Y-%m', date_exec) ORDER BY date_exec DESC) as rn
   FROM stats
+  order by date_exec
 ) t
 WHERE 
-  rn = 1 AND date_exec >= date('now', '-6 month')
-  AND id IN (SELECT statsId FROM stats_groups WHERE groupId=?)
+  rn = 2 AND date_exec >= sqlc.arg(begindate) AND date_exec <= sqlc.arg(enddate)
+  AND id IN (SELECT statsId FROM stats_groups WHERE groupId=sqlc.arg(groupId))
 order by date_exec;

@@ -10,6 +10,7 @@ import (
 
 	"github.com/amacneil/dbmate/v2/pkg/dbmate"
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
+	"github.com/golang-module/carbon/v2"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sgaunet/gitlab-stats/internal/database"
 )
@@ -18,6 +19,7 @@ import (
 var fs embed.FS
 
 type Storage struct {
+	Now     func() time.Time
 	db      *sql.DB
 	dbFile  string
 	queries *database.Queries
@@ -29,10 +31,15 @@ func NewStorage(dbFile string) (*Storage, error) {
 		return nil, err
 	}
 	return &Storage{
+		Now:     time.Now,
 		db:      db,
 		dbFile:  dbFile,
 		queries: database.New(db),
 	}, nil
+}
+
+func (s *Storage) SetNow(now func() time.Time) {
+	s.Now = now
 }
 
 func (s *Storage) Close() error {
@@ -122,9 +129,13 @@ func (s *Storage) AddGroupStats(groupID int64, opened int64, closed int64, total
 	return err
 }
 
-func (s *Storage) GetStatsByProjectId6Months(projectID int64) (openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time, err error) {
+func (s *Storage) GetStatsByProjectId6Months(projectID int64, beginDate carbon.Carbon, endDate carbon.Carbon) (openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time, err error) {
 	// Get project stats
-	stats, err := s.queries.GetStatsByProjectID6Months(context.Background(), projectID)
+	stats, err := s.queries.GetStatsByProjectID6Months(context.Background(), database.GetStatsByProjectID6MonthsParams{
+		Projectid: projectID,
+		Begindate: beginDate.StdTime(),
+		Enddate:   endDate.StdTime(),
+	})
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -132,9 +143,13 @@ func (s *Storage) GetStatsByProjectId6Months(projectID int64) (openedSerie []flo
 	return opendSerie, closedSerie, dateExecSerie, nil
 }
 
-func (s *Storage) GetStatsByGroupID6Months(groupID int64) ([]float64, []float64, []time.Time, error) {
+func (s *Storage) GetStatsByGroupID6Months(groupID int64, beginDate carbon.Carbon, endDate carbon.Carbon) ([]float64, []float64, []time.Time, error) {
 	// Get group stats
-	stats, err := s.queries.GetStatsByGroupID6Months(context.Background(), groupID)
+	stats, err := s.queries.GetStatsByGroupID6Months(context.Background(), database.GetStatsByGroupID6MonthsParams{
+		Groupid:   groupID,
+		Begindate: beginDate.StdTime(),
+		Enddate:   endDate.StdTime(),
+	})
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -149,7 +164,7 @@ func getStatsGroups(stats []database.GetStatsByGroupID6MonthsRow) ([]float64, []
 	for _, stat := range stats {
 		openedSerie = append(openedSerie, float64(stat.Opened))
 		closedSerie = append(closedSerie, float64(stat.Closed))
-		dateExecSerie = append(dateExecSerie, stat.DateExec)
+		dateExecSerie = append(dateExecSerie, stat.DateExec.In(time.UTC))
 	}
 	return openedSerie, closedSerie, dateExecSerie
 }
@@ -161,7 +176,7 @@ func getStatsProjects(stats []database.GetStatsByProjectID6MonthsRow) ([]float64
 	for _, stat := range stats {
 		openedSerie = append(openedSerie, float64(stat.Opened))
 		closedSerie = append(closedSerie, float64(stat.Closed))
-		dateExecSerie = append(dateExecSerie, stat.DateExec)
+		dateExecSerie = append(dateExecSerie, stat.DateExec.UTC())
 	}
 	return openedSerie, closedSerie, dateExecSerie
 }
