@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.22.1
 
 require (
-	github.com/amacneil/dbmate/v2 v2.17.0
+	github.com/amacneil/dbmate/v2 v2.19.0
 	github.com/golang-module/carbon/v2 v2.3.12
 	github.com/google/go-cmp v0.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
@@ -21,5 +21,5 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/wcharczuk/go-chart/v2 v2.1.1 // indirect
 	golang.org/x/image v0.14.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 )
