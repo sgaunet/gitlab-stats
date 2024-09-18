@@ -1,5 +1,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/sgaunet/gitlab-stats)](https://goreportcard.com/report/github.com/sgaunet/gitlab-stats)
-
+[![GitHub release](https://img.shields.io/github/release/sgaunet/gitlab-stats.svg)](https://github.com/sgaunet/gitlab-stats/releases/latest)
+![GitHub Downloads](https://img.shields.io/github/downloads/sgaunet/gitlab-stats/total)
+[![Maintainability](https://api.codeclimate.com/v1/badges/0bfeceb0b75d338d116d/maintainability)](https://codeclimate.com/github/sgaunet/gitlab-stats/maintainability)
+[![License](https://img.shields.io/github/license/sgaunet/gitlab-stats.svg)](LICENSE)
 
 # gitlab-stats
 
