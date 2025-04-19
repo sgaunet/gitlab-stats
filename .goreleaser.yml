@@ -2,10 +2,8 @@ version: 2
 project_name: "gitlab-stats"
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod download
-    # you may remove this if you don't need go generate
-    #- go generate ./...
+    - go generate ./...
 builds:
   - env:
       - CGO_ENABLED=1
@@ -27,6 +25,7 @@ builds:
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     formats: ["binary"]
+
 checksum:
   name_template: 'checksums.txt'
 
