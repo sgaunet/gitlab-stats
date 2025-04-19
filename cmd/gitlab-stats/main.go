@@ -15,6 +15,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//go:generate go tool github.com/sqlc-dev/sqlc/cmd/sqlc generate -f ../../sqlc.yaml
+
 var version string = "development"
 
 func printVersion() {

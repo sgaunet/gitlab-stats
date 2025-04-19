@@ -16,16 +16,10 @@ tasks:
 
   build:
     desc: "Build the binary"
-    deps:
-      - sqlc
     cmds:
       - go mod download
+      - go generate ./...
       - CGO_ENABLED=1 go build -o gitlab-stats cmd/gitlab-stats/*go
-
-  sqlc:
-    desc: "Generate SQL code"
-    cmds:
-      - sqlc generate
 
   test:
     desc: "Run tests"
