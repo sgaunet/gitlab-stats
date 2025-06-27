@@ -154,10 +154,10 @@ func main() {
 			os.Exit(1)
 		}
 		if projectId != 0 {
-			err = s.AddProjectStats(int64(projectId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), time.Now())
+			err = s.AddProjectStats(int64(projectId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), carbon.Now())
 		}
 		if groupId != 0 {
-			err = s.AddGroupStats(int64(groupId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), time.Now())
+			err = s.AddGroupStats(int64(groupId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), carbon.Now())
 		}
 		if err != nil {
 			logrus.Errorln(err.Error())

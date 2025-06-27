@@ -67,7 +67,7 @@ func (s *Storage) Init() error {
 	return nil
 }
 
-func (s *Storage) AddProjectStats(projectID int64, opened int64, closed int64, total int64, dateExec time.Time) error {
+func (s *Storage) AddProjectStats(projectID int64, opened int64, closed int64, total int64, dateExec *carbon.Carbon) error {
 	// Check if project exists
 	_, err := s.queries.GetProject(context.Background(), projectID)
 	if err == sql.ErrNoRows {
@@ -85,7 +85,7 @@ func (s *Storage) AddProjectStats(projectID int64, opened int64, closed int64, t
 		Total:    total,
 		Closed:   closed,
 		Opened:   opened,
-		DateExec: dateExec,
+		DateExec: dateExec.StdTime(),
 	})
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (s *Storage) AddProjectStats(projectID int64, opened int64, closed int64, t
 	return err
 }
 
-func (s *Storage) AddGroupStats(groupID int64, opened int64, closed int64, total int64, dateExec time.Time) error {
+func (s *Storage) AddGroupStats(groupID int64, opened int64, closed int64, total int64, dateExec *carbon.Carbon) error {
 	// Check if group exists
 	group, err := s.queries.GetGroup(context.Background(), groupID)
 	if err == sql.ErrNoRows {
@@ -117,7 +117,7 @@ func (s *Storage) AddGroupStats(groupID int64, opened int64, closed int64, total
 		Total:    total,
 		Closed:   closed,
 		Opened:   opened,
-		DateExec: dateExec,
+		DateExec: dateExec.StdTime(),
 	})
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (s *Storage) AddGroupStats(groupID int64, opened int64, closed int64, total
 	return err
 }
 
-func (s *Storage) GetStatsByProjectId6Months(projectID int64, beginDate carbon.Carbon, endDate carbon.Carbon) (openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time, err error) {
+func (s *Storage) GetStatsByProjectId6Months(projectID int64, beginDate *carbon.Carbon, endDate *carbon.Carbon) (openedSerie []float64, closedSerie []float64, dateExecSerie []time.Time, err error) {
 	// Get project stats
 	stats, err := s.queries.GetStatsByProjectID6Months(context.Background(), database.GetStatsByProjectID6MonthsParams{
 		Projectid: projectID,
@@ -143,7 +143,7 @@ func (s *Storage) GetStatsByProjectId6Months(projectID int64, beginDate carbon.C
 	return opendSerie, closedSerie, dateExecSerie, nil
 }
 
-func (s *Storage) GetStatsByGroupID6Months(groupID int64, beginDate carbon.Carbon, endDate carbon.Carbon) ([]float64, []float64, []time.Time, error) {
+func (s *Storage) GetStatsByGroupID6Months(groupID int64, beginDate *carbon.Carbon, endDate *carbon.Carbon) ([]float64, []float64, []time.Time, error) {
 	// Get group stats
 	stats, err := s.queries.GetStatsByGroupID6Months(context.Background(), database.GetStatsByGroupID6MonthsParams{
 		Groupid:   groupID,
