@@ -45,6 +45,22 @@ Usage of gitlab-stats:
   -v    Get version
 ```
 
+### System Dependencies
+
+This project uses CGO to interface with SQLite, so you need the SQLite development libraries installed.
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install sqlite3 sqlite3-tools libsqlite3-dev
+```
+
+**Red Hat/CentOS/Fedora:**
+```bash
+sudo yum install sqlite sqlite-devel
+# or on newer systems:
+sudo dnf install sqlite sqlite-devel
+```
+
 # Development
 
 ## prerequisites
@@ -79,7 +95,3 @@ If you like to launch manually the pre-commmit hook:
 ```
 task pre-commit
 ```
-
-
-
-sudo apt install sqlite3 sqlite3-tools
