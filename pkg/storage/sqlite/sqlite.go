@@ -180,3 +180,167 @@ func getStatsProjects(stats []database.GetStatsByProjectID6MonthsRow) ([]float64
 	}
 	return openedSerie, closedSerie, dateExecSerie
 }
+
+// EnhancedStats represents the four series for enhanced graphing
+type EnhancedStats struct {
+	TotalOpenedSeries      []float64
+	OpenedDuringPeriod     []float64
+	ClosedDuringPeriod     []float64
+	VelocitySeries         []float64
+	DateExecSeries         []time.Time
+}
+
+func (s *Storage) GetEnhancedStatsByProjectID(projectID int64, beginDate *carbon.Carbon, endDate *carbon.Carbon) (*EnhancedStats, error) {
+	stats, err := s.queries.GetEnhancedStatsByProjectID(context.Background(), database.GetEnhancedStatsByProjectIDParams{
+		Projectid: projectID,
+		Begindate: beginDate.StdTime(),
+		Enddate:   endDate.StdTime(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return processEnhancedStats(stats), nil
+}
+
+func (s *Storage) GetEnhancedStatsByGroupID(groupID int64, beginDate *carbon.Carbon, endDate *carbon.Carbon) (*EnhancedStats, error) {
+	stats, err := s.queries.GetEnhancedStatsByGroupID(context.Background(), database.GetEnhancedStatsByGroupIDParams{
+		Groupid:   groupID,
+		Begindate: beginDate.StdTime(),
+		Enddate:   endDate.StdTime(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return processEnhancedStatsGroup(stats), nil
+}
+
+func processEnhancedStats(stats []database.GetEnhancedStatsByProjectIDRow) *EnhancedStats {
+	var totalOpenedSeries []float64
+	var openedDuringPeriod []float64
+	var closedDuringPeriod []float64
+	var velocitySeries []float64
+	var dateExecSeries []time.Time
+
+	for _, stat := range stats {
+		// Convert interface{} to int64, handling potential nil values
+		totalOpened := convertToInt64(stat.TotalOpened)
+		currentOpened := convertToInt64(stat.CurrentOpened)
+		currentClosed := convertToInt64(stat.CurrentClosed)
+		prevTotal := convertToInt64(stat.PrevTotal)
+		prevClosed := convertToInt64(stat.PrevClosed)
+		
+		// Calculate period metrics
+		// opened during period = total new issues created in period = (current_total - prev_total)
+		openedInPeriod := totalOpened - prevTotal
+		// closed during period = new closed issues in period = (current_closed - prev_closed)
+		closedInPeriod := currentClosed - prevClosed
+		// velocity = net change in open issues (positive = more open, negative = more closed)
+		velocity := openedInPeriod - closedInPeriod
+
+		totalOpenedSeries = append(totalOpenedSeries, float64(currentOpened))  // Currently open issues
+		openedDuringPeriod = append(openedDuringPeriod, float64(openedInPeriod))
+		closedDuringPeriod = append(closedDuringPeriod, float64(closedInPeriod))
+		velocitySeries = append(velocitySeries, float64(velocity))
+		
+		// Convert date
+		dateTime := convertToTime(stat.DateExec)
+		if !dateTime.IsZero() {
+			dateExecSeries = append(dateExecSeries, dateTime.UTC())
+		}
+	}
+
+	return &EnhancedStats{
+		TotalOpenedSeries:      totalOpenedSeries,
+		OpenedDuringPeriod:     openedDuringPeriod,
+		ClosedDuringPeriod:     closedDuringPeriod,
+		VelocitySeries:         velocitySeries,
+		DateExecSeries:         dateExecSeries,
+	}
+}
+
+func processEnhancedStatsGroup(stats []database.GetEnhancedStatsByGroupIDRow) *EnhancedStats {
+	var totalOpenedSeries []float64
+	var openedDuringPeriod []float64
+	var closedDuringPeriod []float64
+	var velocitySeries []float64
+	var dateExecSeries []time.Time
+
+	for _, stat := range stats {
+		// Convert interface{} to int64, handling potential nil values
+		totalOpened := convertToInt64(stat.TotalOpened)
+		currentOpened := convertToInt64(stat.CurrentOpened)
+		currentClosed := convertToInt64(stat.CurrentClosed)
+		prevTotal := convertToInt64(stat.PrevTotal)
+		prevClosed := convertToInt64(stat.PrevClosed)
+		
+		// Calculate period metrics
+		// opened during period = total new issues created in period = (current_total - prev_total)
+		openedInPeriod := totalOpened - prevTotal
+		// closed during period = new closed issues in period = (current_closed - prev_closed)
+		closedInPeriod := currentClosed - prevClosed
+		// velocity = net change in open issues (positive = more open, negative = more closed)
+		velocity := openedInPeriod - closedInPeriod
+
+		totalOpenedSeries = append(totalOpenedSeries, float64(currentOpened))  // Currently open issues
+		openedDuringPeriod = append(openedDuringPeriod, float64(openedInPeriod))
+		closedDuringPeriod = append(closedDuringPeriod, float64(closedInPeriod))
+		velocitySeries = append(velocitySeries, float64(velocity))
+		
+		// Convert date
+		dateTime := convertToTime(stat.DateExec)
+		if !dateTime.IsZero() {
+			dateExecSeries = append(dateExecSeries, dateTime.UTC())
+		}
+	}
+
+	return &EnhancedStats{
+		TotalOpenedSeries:      totalOpenedSeries,
+		OpenedDuringPeriod:     openedDuringPeriod,
+		ClosedDuringPeriod:     closedDuringPeriod,
+		VelocitySeries:         velocitySeries,
+		DateExecSeries:         dateExecSeries,
+	}
+}
+
+func convertToInt64(val interface{}) int64 {
+	if val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case int64:
+		return v
+	case int:
+		return int64(v)
+	case float64:
+		return int64(v)
+	default:
+		return 0
+	}
+}
+
+func convertToTime(val interface{}) time.Time {
+	if val == nil {
+		return time.Time{}
+	}
+	switch v := val.(type) {
+	case time.Time:
+		return v
+	case string:
+		// Try to parse common SQLite datetime formats
+		formats := []string{
+			"2006-01-02 15:04:05-07:00",
+			"2006-01-02 15:04:05+00:00",
+			"2006-01-02 15:04:05",
+			"2006-01-02T15:04:05Z",
+			"2006-01-02T15:04:05-07:00",
+		}
+		for _, format := range formats {
+			if t, err := time.Parse(format, v); err == nil {
+				return t
+			}
+		}
+		return time.Time{}
+	default:
+		return time.Time{}
+	}
+}

@@ -64,3 +64,35 @@ WHERE
   rn = 2 AND date_exec >= sqlc.arg(begindate) AND date_exec <= sqlc.arg(enddate)
   AND id IN (SELECT statsId FROM stats_groups WHERE groupId=sqlc.arg(groupId))
 order by date_exec;
+
+-- name: GetEnhancedStatsByProjectID :many
+SELECT 
+  strftime('%Y-%m', date_exec) as period,
+  MAX(total) as total_opened,
+  MAX(opened) as current_opened,
+  MAX(closed) as current_closed,
+  LAG(MAX(total), 1, 0) OVER(ORDER BY strftime('%Y-%m', date_exec)) as prev_total,
+  LAG(MAX(closed), 1, 0) OVER(ORDER BY strftime('%Y-%m', date_exec)) as prev_closed,
+  MAX(date_exec) as date_exec
+FROM stats
+WHERE 
+  date_exec >= sqlc.arg(begindate) AND date_exec <= sqlc.arg(enddate)
+  AND id IN (SELECT statsId FROM stats_projects WHERE projectId=sqlc.arg(projectId))
+GROUP BY strftime('%Y-%m', date_exec)
+ORDER BY period;
+
+-- name: GetEnhancedStatsByGroupID :many
+SELECT 
+  strftime('%Y-%m', date_exec) as period,
+  MAX(total) as total_opened,
+  MAX(opened) as current_opened,
+  MAX(closed) as current_closed,
+  LAG(MAX(total), 1, 0) OVER(ORDER BY strftime('%Y-%m', date_exec)) as prev_total,
+  LAG(MAX(closed), 1, 0) OVER(ORDER BY strftime('%Y-%m', date_exec)) as prev_closed,
+  MAX(date_exec) as date_exec
+FROM stats
+WHERE 
+  date_exec >= sqlc.arg(begindate) AND date_exec <= sqlc.arg(enddate)
+  AND id IN (SELECT statsId FROM stats_groups WHERE groupId=sqlc.arg(groupId))
+GROUP BY strftime('%Y-%m', date_exec)
+ORDER BY period;

@@ -55,8 +55,6 @@ func main() {
 
 	// for the last 12 months
 	for dbegin.Compare("<", dend) {
-		// fmt.Println(dbegin.String())
-		dbegin = dbegin.AddMonth()
 		// add a random number of issues between 0 and 10
 		openIssues += 0 + rand.Intn(10)
 		// same for closed issues
@@ -74,5 +72,6 @@ func main() {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
+		dbegin = dbegin.AddMonth()
 	}
 }

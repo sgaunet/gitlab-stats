@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/golang-module/carbon/v2"
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
@@ -121,23 +120,30 @@ func main() {
 	enddate := carbon.CreateFromStdTime(s.Now()).StartOfMonth()
 
 	if graphFilePath != "" {
-		var openedSerie []float64
-		var closedSerie []float64
-		var dateExecSerie []time.Time
+		logrus.Infoln("retrieve enhanced stats from database")
+		var enhancedStats *sqlite.EnhancedStats
 		var err error
-		logrus.Infoln("retrieve stats from file")
+		
 		if projectId != 0 {
-			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByProjectId6Months(int64(projectId), begindate, enddate)
+			enhancedStats, err = s.GetEnhancedStatsByProjectID(int64(projectId), begindate, enddate)
 		} else {
-			openedSerie, closedSerie, dateExecSerie, err = s.GetStatsByGroupID6Months(int64(groupId), begindate, enddate)
+			enhancedStats, err = s.GetEnhancedStatsByGroupID(int64(groupId), begindate, enddate)
 		}
 		if err != nil {
-			logrus.Errorln("error when retrieving stats: ", err.Error())
+			logrus.Errorln("error when retrieving enhanced stats: ", err.Error())
 			os.Exit(1)
 		}
-		err = graphissues.CreateGraph(graphFilePath, openedSerie, closedSerie, dateExecSerie)
+		
+		err = graphissues.CreateEnhancedGraph(
+			graphFilePath, 
+			enhancedStats.TotalOpenedSeries,
+			enhancedStats.OpenedDuringPeriod,
+			enhancedStats.ClosedDuringPeriod,
+			enhancedStats.VelocitySeries,
+			enhancedStats.DateExecSeries,
+		)
 		if err != nil {
-			logrus.Errorln("error when creating file: ", err.Error())
+			logrus.Errorln("error when creating enhanced graph: ", err.Error())
 			os.Exit(1)
 		}
 	} else {
