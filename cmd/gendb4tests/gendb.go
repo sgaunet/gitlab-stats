@@ -65,10 +65,10 @@ func main() {
 		allIssues := openIssues + closedIssues
 		// append stats
 		if projectID != 0 {
-			err = s.AddProjectStats(int64(projectID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin.ToStdTime())
+			err = s.AddProjectStats(int64(projectID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin)
 		}
 		if groupID != 0 {
-			err = s.AddGroupStats(int64(groupID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin.ToStdTime())
+			err = s.AddGroupStats(int64(groupID), int64(openIssues), int64(closedIssues), int64(allIssues), dbegin)
 		}
 		if err != nil {
 			fmt.Println(err.Error())
