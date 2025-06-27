@@ -26,11 +26,11 @@ tasks:
     # dir: gowork
     cmds:
       - test -d tests || mkdir tests
-      - rm -f /tmp/db.json 
+      - rm -f /tmp/db.sqlite3 
       - go run cmd/gendb4tests/*go -p 1
-      - go run cmd/gitlab-stats/*go -p 1 -o tests/stats-project-1.png -db /tmp/db.json
+      - go run cmd/gitlab-stats/*go -p 1 -o tests/stats-project-1.png -db /tmp/db.sqlite3 -s 12
       - go run cmd/gendb4tests/*go -g 10
-      - go run cmd/gitlab-stats/*go -g 10 -o tests/stats-project-10.png -db /tmp/db.json
+      - go run cmd/gitlab-stats/*go -g 10 -o tests/stats-project-10.png -db /tmp/db.sqlite3 -s 12
 
   snapshot:
     desc: "Create a snapshot"
