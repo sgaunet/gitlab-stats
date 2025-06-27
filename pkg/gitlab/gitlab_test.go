@@ -10,7 +10,7 @@ import (
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
 )
 
-func TestGitlabService_Groups(t *testing.T) {
+func TestService_Groups(t *testing.T) {
 	response := []struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
@@ -31,7 +31,7 @@ func TestGitlabService_Groups(t *testing.T) {
 	client := ts.Client()
 
 	r := gitlab.NewService()
-	r.SetHttpClient(client)
+	r.SetHTTPClient(client)
 	r.SetGitlabEndpoint(ts.URL)
 	// retrieve groups
 	resp, err := r.Get("groups")
@@ -46,7 +46,7 @@ func TestGitlabService_Groups(t *testing.T) {
 	}
 }
 
-func TestGitlabService_CheckToken(t *testing.T) {
+func TestService_CheckToken(t *testing.T) {
 	tokenGitlab := "test"
 	response := []struct {
 		Id   int    `json:"id"`
@@ -70,7 +70,7 @@ func TestGitlabService_CheckToken(t *testing.T) {
 	client := ts.Client()
 
 	r := gitlab.NewService()
-	r.SetHttpClient(client)
+	r.SetHTTPClient(client)
 	r.SetGitlabEndpoint(ts.URL)
 	r.SetToken(tokenGitlab)
 
@@ -91,7 +91,7 @@ func TestGitlabService_CheckToken(t *testing.T) {
 	}
 }
 
-func TestGitlabService_Post_CheckToken(t *testing.T) {
+func TestService_Post_CheckToken(t *testing.T) {
 	tokenGitlab := "test"
 	response := []struct {
 		Id   int    `json:"id"`
@@ -115,7 +115,7 @@ func TestGitlabService_Post_CheckToken(t *testing.T) {
 	client := ts.Client()
 
 	r := gitlab.NewService()
-	r.SetHttpClient(client)
+	r.SetHTTPClient(client)
 	r.SetGitlabEndpoint(ts.URL)
 	r.SetToken(tokenGitlab)
 
