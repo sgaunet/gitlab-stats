@@ -1,8 +1,10 @@
+// Package main provides GitLab statistics collection and visualization.
 package main
 
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,11 +16,18 @@ import (
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
 )
 
+var (
+	// ErrProjectNotFound is returned when a project cannot be found.
+	ErrProjectNotFound = errors.New("project not found")
+	// ErrGitNotFound is returned when .git directory is not found.
+	ErrGitNotFound     = errors.New(".git not found")
+)
+
 type project struct {
-	Id            int    `json:"id"`
-	Name          string `json:"name"`
-	SshUrlToRepo  string `json:"ssh_url_to_repo"`
-	HttpUrlToRepo string `json:"http_url_to_repo"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	SSHURLToRepo string `json:"ssh_url_to_repo"`
+	HTTPURLToRepo string `json:"http_url_to_repo"`
 }
 
 func findProject(remoteOrigin string) (project, error) {
@@ -31,38 +40,41 @@ func findProject(remoteOrigin string) (project, error) {
 
 	resp, err := gs.Get("search?scope=projects&search=" + projectName)
 	if err != nil {
-		return project{}, err
+		return project{}, fmt.Errorf("failed to search for project: %w", err)
 	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Error closing response body: %v", err)
+		}
+	}()
 	res, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return project{}, err
+		return project{}, fmt.Errorf("failed to read response body: %w", err)
 	}
-	defer resp.Body.Close()
 
 	var p []project
 	err = json.Unmarshal(res, &p)
 	if err != nil {
-		log.Errorln(err.Error())
-		os.Exit(1)
+		return project{}, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	for _, project := range p {
 		log.Debugln(project.Name)
-		log.Debugln(project.Id)
-		log.Debugln(project.HttpUrlToRepo)
-		log.Debugln(project.SshUrlToRepo)
+		log.Debugln(project.ID)
+		log.Debugln(project.HTTPURLToRepo)
+		log.Debugln(project.SSHURLToRepo)
 
-		if project.SshUrlToRepo == remoteOrigin {
-			return project, err
+		if project.SSHURLToRepo == remoteOrigin {
+			return project, nil
 		}
 	}
-	return project{}, errors.New("project not found")
+	return project{}, ErrProjectNotFound
 }
 
 func findGitRepository() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get working directory: %w", err)
 	}
 
 	for cwd != "/" {
@@ -70,14 +82,15 @@ func findGitRepository() (string, error) {
 		stat, err := os.Stat(cwd + string(os.PathSeparator) + ".git")
 		if err == nil {
 			if stat.IsDir() {
-				return cwd, err
+				return cwd, nil
 			}
 		}
 		cwd = filepath.Dir(cwd)
 	}
-	return "", errors.New(".git not found")
+	return "", ErrGitNotFound
 }
 
+// GetRemoteOrigin extracts the remote origin URL from git config file.
 func GetRemoteOrigin(gitConfigFile string) string {
 	cfg, err := ini.Load(gitConfigFile)
 	if err != nil {

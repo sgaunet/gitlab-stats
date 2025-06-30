@@ -2,55 +2,68 @@ package gitlab
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 )
 
-// https://docs.gitlab.com/ee/api/issues_statistics.html
+const httpOK = 200
+
+// ErrNon200Response is returned when the HTTP response status is not 200.
+var ErrNon200Response = errors.New("non-200 response code")
+
+// ServiceStatistics provides access to GitLab issue statistics API.
+// See: https://docs.gitlab.com/ee/api/issues_statistics.html
 type ServiceStatistics struct {
 	uri string
 }
 
-func NewProjectStatistics(projectId int) *ServiceStatistics {
+// NewProjectStatistics creates a new ServiceStatistics for a project.
+func NewProjectStatistics(projectID int) *ServiceStatistics {
 	r := ServiceStatistics{
-		uri: fmt.Sprintf("projects/%d/issues_statistics?", projectId),
+		uri: fmt.Sprintf("projects/%d/issues_statistics?", projectID),
 	}
 	return &r
 }
 
-func NewGroupStatistics(groupId int) *ServiceStatistics {
+// NewGroupStatistics creates a new ServiceStatistics for a group.
+func NewGroupStatistics(groupID int) *ServiceStatistics {
 	r := ServiceStatistics{
-		uri: fmt.Sprintf("groups/%d/issues_statistics?", groupId),
+		uri: fmt.Sprintf("groups/%d/issues_statistics?", groupID),
 	}
 	return &r
 }
 
-func (r *ServiceStatistics) GetStatistics(gs *GitlabService) (result Statistics, err error) {
+// GetStatistics retrieves statistics from GitLab API.
+func (r *ServiceStatistics) GetStatistics(gs *Service) (Statistics, error) {
 	// if r.uri == "" {
 	// 	return result, errors.New("no project or group specified")
 	// }
 	resp, err := gs.Get(r.uri)
 	if err != nil {
-		return result, err
+		return Statistics{}, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	defer func() {
+		_ = resp.Body.Close() // ignore error
+	}()
+	if resp.StatusCode != httpOK {
 		// !TODO: handle 404
-		return result, fmt.Errorf("status code: %d", resp.StatusCode)
+		return Statistics{}, fmt.Errorf("%w: %d", ErrNon200Response, resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return result, err
+		return Statistics{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 	// if err := json.Unmarshal(body, &result); err != nil {
 	// 	return result, err
 	// }
+	var result Statistics
 	decoder := json.NewDecoder(strings.NewReader(string(body)))
 	decoder.DisallowUnknownFields()
 	err = decoder.Decode(&result)
 	if err != nil {
-		return result, err
+		return Statistics{}, fmt.Errorf("failed to decode JSON response: %w", err)
 	}
 	return result, nil
 }

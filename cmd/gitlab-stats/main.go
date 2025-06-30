@@ -10,89 +10,110 @@ import (
 	"github.com/sgaunet/gitlab-stats/pkg/graphissues"
 	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 
-	// storage "github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
+	// storage "github.com/sgaunet/gitlab-stats/pkg/storage/sqlite".
 	"github.com/sirupsen/logrus"
 )
 
 //go:generate go tool github.com/sqlc-dev/sqlc/cmd/sqlc generate -f ../../sqlc.yaml
 
-var version string = "development"
+var version = "development"
 
 func printVersion() {
 	fmt.Println(version)
 }
 
-func main() {
-	var (
-		debugLevel    string
-		projectId     int
-		groupId       int
-		vOption       bool
-		graphFilePath string
-		dbFile        string
-		sinceMonth    int
-		n             *gitlab.ServiceStatistics
-	)
-	// Parameters treatment (except src + dest)
-	flag.StringVar(&graphFilePath, "o", "", "file path to generate statistic graph (do not fullfill DB)")
-	flag.StringVar(&debugLevel, "d", "error", "Debug level (info,warn,debug)")
-	flag.StringVar(&dbFile, "db", os.Getenv("HOME")+"/.gitlab-stats/db.sqlite3", "DB file (default $HOME/.gitlab-stats/db.sqlite3))")
-	flag.BoolVar(&vOption, "v", false, "Get version")
-	flag.IntVar(&projectId, "p", 0, "Project ID to get issues from")
-	flag.IntVar(&groupId, "g", 0, "Group ID to get issues from (not compatible with -p option)")
-	flag.IntVar(&sinceMonth, "s", 6, "graph last X month")
+type config struct {
+	debugLevel    string
+	projectID     int
+	groupID       int
+	vOption       bool
+	graphFilePath string
+	dbFile        string
+	sinceMonth    int
+}
+
+func parseAndValidateFlags() config {
+	cfg := config{}
+	
+	// Parameters treatment
+	flag.StringVar(&cfg.graphFilePath, "o", "", "file path to generate statistic graph (do not fulfill DB)")
+	flag.StringVar(&cfg.debugLevel, "d", "error", "Debug level (info,warn,debug)")
+	defaultDBFile := os.Getenv("HOME") + "/.gitlab-stats/db.sqlite3"
+	flag.StringVar(&cfg.dbFile, "db", defaultDBFile, "DB file (default $HOME/.gitlab-stats/db.sqlite3))")
+	flag.BoolVar(&cfg.vOption, "v", false, "Get version")
+	flag.IntVar(&cfg.projectID, "p", 0, "Project ID to get issues from")
+	flag.IntVar(&cfg.groupID, "g", 0, "Group ID to get issues from (not compatible with -p option)")
+	const defaultSinceMonths = 6
+	flag.IntVar(&cfg.sinceMonth, "s", defaultSinceMonths, "graph last X month")
 	flag.Parse()
 
-	if vOption {
+	if cfg.vOption {
 		printVersion()
 		os.Exit(0)
 	}
 
-	if sinceMonth < 1 {
+	validateConfig(cfg)
+	return cfg
+}
+
+func validateConfig(cfg config) {
+	if cfg.sinceMonth < 1 {
 		logrus.Errorf("sinceMonth should be greater than 0\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
-	if debugLevel != "info" && debugLevel != "error" && debugLevel != "debug" {
+	if cfg.debugLevel != "info" && cfg.debugLevel != "error" && cfg.debugLevel != "debug" {
 		logrus.Errorf("debuglevel should be info or error or debug\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	if projectId != 0 && groupId != 0 {
+	
+	if cfg.projectID != 0 && cfg.groupID != 0 {
 		fmt.Fprintln(os.Stderr, "-p and -g option are incompatible")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	initTrace(debugLevel)
+}
+
+func setupEnvironment() {
 	if len(os.Getenv("GITLAB_TOKEN")) == 0 {
 		logrus.Errorf("Set GITLAB_TOKEN environment variable")
 		os.Exit(1)
 	}
+	
 	if len(os.Getenv("GITLAB_URI")) == 0 {
-		os.Setenv("GITLAB_URI", "https://gitlab.com")
+		if err := os.Setenv("GITLAB_URI", "https://gitlab.com"); err != nil {
+			logrus.Warnf("Failed to set GITLAB_URI: %v", err)
+		}
+	}
+}
+
+func detectProjectIfNeeded(cfg *config) {
+	if cfg.groupID != 0 || cfg.projectID != 0 {
+		return
+	}
+	
+	// Try to find git repository and project
+	gitFolder, err := findGitRepository()
+	if err != nil {
+		logrus.Errorf("Folder .git not found")
+		os.Exit(1)
+	}
+	
+	remoteOrigin := GetRemoteOrigin(gitFolder + string(os.PathSeparator) + ".git" + string(os.PathSeparator) + "config")
+	project, err := findProject(remoteOrigin)
+	if err != nil {
+		logrus.Errorln(err.Error())
+		os.Exit(1)
 	}
 
-	if groupId == 0 && projectId == 0 {
-		// Try to find git repository and project
-		gitFolder, err := findGitRepository()
-		if err != nil {
-			logrus.Errorf("Folder .git not found")
-			os.Exit(1)
-		}
-		remoteOrigin := GetRemoteOrigin(gitFolder + string(os.PathSeparator) + ".git" + string(os.PathSeparator) + "config")
+	logrus.Infoln("Project found: ", project.SSHURLToRepo)
+	logrus.Infoln("Project found: ", project.ID)
+	cfg.projectID = project.ID
+}
 
-		project, err := findProject(remoteOrigin)
-		if err != nil {
-			logrus.Errorln(err.Error())
-			os.Exit(1)
-		}
-
-		logrus.Infoln("Project found: ", project.SshUrlToRepo)
-		logrus.Infoln("Project found: ", project.Id)
-		projectId = project.Id
-	}
-
+func initializeDatabase(dbFile string) *sqlite.Storage {
 	// Check existence of DB file
 	_, err := os.Stat(dbFile)
 	if os.IsNotExist(err) {
@@ -107,7 +128,9 @@ func main() {
 			logrus.Errorln(err.Error())
 			os.Exit(1)
 		}
-		s.Close()
+		if err := s.Close(); err != nil {
+			logrus.Warnf("Failed to close storage: %v", err)
+		}
 	}
 
 	s, err := sqlite.NewStorage(dbFile)
@@ -115,66 +138,99 @@ func main() {
 		logrus.Errorln(err.Error())
 		os.Exit(1)
 	}
+	return s
+}
 
-	begindate := carbon.CreateFromStdTime(s.Now()).AddMonths(-sinceMonth).StartOfMonth()
+func generateGraph(s *sqlite.Storage, cfg config) {
+	begindate := carbon.CreateFromStdTime(s.Now()).AddMonths(-cfg.sinceMonth).StartOfMonth()
 	enddate := carbon.CreateFromStdTime(s.Now()).StartOfMonth()
-
-	if graphFilePath != "" {
-		logrus.Infoln("retrieve enhanced stats from database")
-		var enhancedStats *sqlite.EnhancedStats
-		var err error
-		
-		if projectId != 0 {
-			enhancedStats, err = s.GetEnhancedStatsByProjectID(int64(projectId), begindate, enddate)
-		} else {
-			enhancedStats, err = s.GetEnhancedStatsByGroupID(int64(groupId), begindate, enddate)
-		}
-		if err != nil {
-			logrus.Errorln("error when retrieving enhanced stats: ", err.Error())
-			os.Exit(1)
-		}
-		
-		err = graphissues.CreateEnhancedGraph(
-			graphFilePath, 
-			enhancedStats.TotalOpenedSeries,
-			enhancedStats.OpenedDuringPeriod,
-			enhancedStats.ClosedDuringPeriod,
-			enhancedStats.VelocitySeries,
-			enhancedStats.DateExecSeries,
-		)
-		if err != nil {
-			logrus.Errorln("error when creating enhanced graph: ", err.Error())
-			os.Exit(1)
-		}
+	
+	logrus.Infoln("retrieve enhanced stats from database")
+	var enhancedStats *sqlite.EnhancedStats
+	var err error
+	
+	if cfg.projectID != 0 {
+		enhancedStats, err = s.GetEnhancedStatsByProjectID(int64(cfg.projectID), begindate, enddate)
 	} else {
-		gs := gitlab.NewService()
-		if projectId != 0 {
-			n = gitlab.NewProjectStatistics(projectId)
-		}
-		if groupId != 0 {
-			n = gitlab.NewGroupStatistics(groupId)
-		}
-		statistics, err := n.GetStatistics(gs)
-		if err != nil {
-			logrus.Errorln(err.Error())
-			os.Exit(1)
-		}
-		if projectId != 0 {
-			err = s.AddProjectStats(int64(projectId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), carbon.Now())
-		}
-		if groupId != 0 {
-			err = s.AddGroupStats(int64(groupId), int64(statistics.Statistics.Counts.Opened), int64(statistics.Statistics.Counts.Closed), int64(statistics.Statistics.Counts.All), carbon.Now())
-		}
-		if err != nil {
-			logrus.Errorln(err.Error())
-			os.Exit(1)
-		}
+		enhancedStats, err = s.GetEnhancedStatsByGroupID(int64(cfg.groupID), begindate, enddate)
+	}
+	if err != nil {
+		logrus.Errorln("error when retrieving enhanced stats: ", err.Error())
+		os.Exit(1)
+	}
+	
+	err = graphissues.CreateEnhancedGraph(
+		cfg.graphFilePath, 
+		enhancedStats.TotalOpenedSeries,
+		enhancedStats.OpenedDuringPeriod,
+		enhancedStats.ClosedDuringPeriod,
+		enhancedStats.VelocitySeries,
+		enhancedStats.DateExecSeries,
+	)
+	if err != nil {
+		logrus.Errorln("error when creating enhanced graph: ", err.Error())
+		os.Exit(1)
+	}
+}
+
+func collectData(s *sqlite.Storage, cfg config) {
+	gs := gitlab.NewService()
+	var n *gitlab.ServiceStatistics
+	
+	if cfg.projectID != 0 {
+		n = gitlab.NewProjectStatistics(cfg.projectID)
+	} else {
+		n = gitlab.NewGroupStatistics(cfg.groupID)
+	}
+	
+	statistics, err := n.GetStatistics(gs)
+	if err != nil {
+		logrus.Errorln(err.Error())
+		os.Exit(1)
+	}
+	
+	if cfg.projectID != 0 {
+		err = s.AddProjectStats(
+			int64(cfg.projectID), 
+			int64(statistics.Statistics.Counts.Opened), 
+			int64(statistics.Statistics.Counts.Closed), 
+			int64(statistics.Statistics.Counts.All), 
+			carbon.Now(),
+		)
+	} else {
+		err = s.AddGroupStats(
+			int64(cfg.groupID), 
+			int64(statistics.Statistics.Counts.Opened), 
+			int64(statistics.Statistics.Counts.Closed), 
+			int64(statistics.Statistics.Counts.All), 
+			carbon.Now(),
+		)
+	}
+	
+	if err != nil {
+		logrus.Errorln(err.Error())
+		os.Exit(1)
+	}
+}
+
+func main() {
+	cfg := parseAndValidateFlags()
+	initTrace(cfg.debugLevel)
+	setupEnvironment()
+	detectProjectIfNeeded(&cfg)
+	
+	s := initializeDatabase(cfg.dbFile)
+	
+	if cfg.graphFilePath != "" {
+		generateGraph(s, cfg)
+	} else {
+		collectData(s, cfg)
 	}
 }
 
 func initTrace(debugLevel string) {
 	// Log as JSON instead of the default ASCII formatter.
-	//logrus.SetFormatter(&logrus.JSONFormatter{})
+	// logrus.SetFormatter(&logrus.JSONFormatter{})
 	// logrus.SetFormatter(&logrus.TextFormatter{
 	// 	DisableColors: true,
 	// 	FullTimestamp: true,

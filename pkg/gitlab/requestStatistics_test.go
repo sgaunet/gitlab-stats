@@ -32,7 +32,7 @@ func TestGetStatisticsGoodResponse(t *testing.T) {
 	client := ts.Client()
 
 	s := gitlab.NewService()
-	s.SetHttpClient(client)
+	s.SetHTTPClient(client)
 	s.SetGitlabEndpoint(ts.URL)
 
 	r := gitlab.NewProjectStatistics(1)
@@ -64,7 +64,7 @@ func TestGetStatisticsWrongResponse(t *testing.T) {
 	client := ts.Client()
 
 	s := gitlab.NewService()
-	s.SetHttpClient(client)
+	s.SetHTTPClient(client)
 	s.SetGitlabEndpoint(ts.URL)
 
 	r := gitlab.NewProjectStatistics(1)
