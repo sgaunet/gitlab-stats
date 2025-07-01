@@ -282,8 +282,8 @@ func processEnhancedStatsGeneric(
 		openedInPeriod := totalOpenedVal - prevTotalVal
 		// closed during period = new closed issues in period = (current_closed - prev_closed)
 		closedInPeriod := currentClosedVal - prevClosedVal
-		// velocity = net change in open issues (positive = more open, negative = more closed)
-		velocity := openedInPeriod - closedInPeriod
+		// velocity = net progress (positive = more closed than opened, negative = backlog growing)
+		velocity := closedInPeriod - openedInPeriod
 
 		totalOpenedSeries = append(totalOpenedSeries, float64(currentOpenedVal))  // Currently open issues
 		openedDuringPeriod = append(openedDuringPeriod, float64(openedInPeriod))
