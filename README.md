@@ -2,6 +2,10 @@
 [![GitHub release](https://img.shields.io/github/release/sgaunet/gitlab-stats.svg)](https://github.com/sgaunet/gitlab-stats/releases/latest)
 ![GitHub Downloads](https://img.shields.io/github/downloads/sgaunet/gitlab-stats/total)
 ![coverage](https://raw.githubusercontent.com/wiki/sgaunet/gitlab-stats/coverage-badge.svg)
+[![Linter](https://github.com/sgaunet/gitlab-stats/actions/workflows/linter.yml/badge.svg)](https://github.com/sgaunet/gitlab-stats/actions/workflows/linter.yml)
+[![Coverage Badge Generation](https://github.com/sgaunet/gitlab-stats/actions/workflows/coverage.yml/badge.svg)](https://github.com/sgaunet/gitlab-stats/actions/workflows/coverage.yml)
+[![Snapshot](https://github.com/sgaunet/gitlab-stats/actions/workflows/snapshot.yml/badge.svg)](https://github.com/sgaunet/gitlab-stats/actions/workflows/snapshot.yml)
+[![Release](https://github.com/sgaunet/gitlab-stats/actions/workflows/release.yml/badge.svg)](https://github.com/sgaunet/gitlab-stats/actions/workflows/release.yml)
 [![License](https://img.shields.io/github/license/sgaunet/gitlab-stats.svg)](LICENSE)
 
 # gitlab-stats
@@ -37,7 +41,7 @@ Usage of gitlab-stats:
   -g int
         Group ID to get issues from (not compatible with -p option)
   -o string
-        file path to generate statistic graph (do not fullfill DB)
+        file path to generate statistic graph (do not fulfill DB)
   -p int
         Project ID to get issues from
   -s int
