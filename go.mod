@@ -6,11 +6,11 @@ tool github.com/sqlc-dev/sqlc/cmd/sqlc
 
 require (
 	github.com/amacneil/dbmate/v2 v2.27.0
+	github.com/go-analyze/charts v0.5.15
 	github.com/golang-module/carbon/v2 v2.6.9
 	github.com/google/go-cmp v0.7.0
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/sirupsen/logrus v1.9.3
-	github.com/vicanso/go-charts/v2 v2.6.10
 	gopkg.in/ini.v1 v1.67.0
 )
 
@@ -52,7 +52,6 @@ require (
 	github.com/tetratelabs/wazero v1.8.2 // indirect
 	github.com/wasilibs/go-pgquery v0.0.0-20240606042535-c0843d6592cc // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240604052452-61d7981e9a38 // indirect
-	github.com/wcharczuk/go-chart/v2 v2.1.2 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

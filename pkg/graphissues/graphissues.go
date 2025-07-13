@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	charts "github.com/vicanso/go-charts/v2"
+	"github.com/go-analyze/charts"
 )
 
 const (
@@ -39,17 +39,19 @@ func CreateGraph(graphFilePath string, openedSerie []float64, closedSerie []floa
 	values := [][]float64{
 		openedSerie,
 	}
-	charts.SetDefaultHeight(defaultHeight)
-	charts.SetDefaultWidth(defaultWidth)
-	p, err := charts.LineRender(
-		values,
-		// charts.TitleTextOptionFunc("Line"),
-		charts.XAxisDataOptionFunc(labels),
-		charts.LegendLabelsOptionFunc([]string{
-			"Opened issues",
-			// "Closed issues",
-		}, charts.PositionCenter),
-	)
+	
+	opt := charts.NewLineChartOptionWithData(values)
+	opt.XAxis.Labels = labels
+	opt.Legend = charts.LegendOption{
+		SeriesNames: []string{"Opened issues"},
+		Offset:      charts.OffsetCenter,
+	}
+	
+	p := charts.NewPainter(charts.PainterOptions{
+		Width:  defaultWidth,
+		Height: defaultHeight,
+	})
+	err := p.LineChart(opt)
 	if err != nil {
 		return fmt.Errorf("failed to render line chart: %w", err)
 	}
@@ -90,19 +92,24 @@ func CreateEnhancedGraph(
 		velocitySeries,
 	}
 	
-	charts.SetDefaultHeight(defaultHeight)
-	charts.SetDefaultWidth(defaultWidth)
-	p, err := charts.LineRender(
-		values,
-		charts.TitleTextOptionFunc("GitLab Issues Statistics"),
-		charts.XAxisDataOptionFunc(labels),
-		charts.LegendLabelsOptionFunc([]string{
+	opt := charts.NewLineChartOptionWithData(values)
+	opt.Title = charts.TitleOption{Text: "GitLab Issues Statistics"}
+	opt.XAxis.Labels = labels
+	opt.Legend = charts.LegendOption{
+		SeriesNames: []string{
 			"Currently Open Issues",
 			"Issues Opened This Period",
 			"Issues Closed This Period",
 			"Velocity (Net Change)",
-		}, charts.PositionCenter),
-	)
+		},
+		Offset: charts.OffsetCenter,
+	}
+	
+	p := charts.NewPainter(charts.PainterOptions{
+		Width:  defaultWidth,
+		Height: defaultHeight,
+	})
+	err := p.LineChart(opt)
 	if err != nil {
 		return fmt.Errorf("failed to render line chart: %w", err)
 	}
