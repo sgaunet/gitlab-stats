@@ -9,7 +9,7 @@ require (
 	github.com/go-analyze/charts v0.5.15
 	github.com/golang-module/carbon/v2 v2.6.9
 	github.com/google/go-cmp v0.7.0
-	github.com/mattn/go-sqlite3 v1.14.28
+	github.com/mattn/go-sqlite3 v1.14.30
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/ini.v1 v1.67.0
 )
