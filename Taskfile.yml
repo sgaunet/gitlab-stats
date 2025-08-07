@@ -25,7 +25,7 @@ tasks:
     cmds:
       - go mod download
       - go generate ./...
-      - CGO_ENABLED=1 go build -o gitlab-stats cmd/gitlab-stats/*go
+      - CGO_ENABLED=0 go build -o gitlab-stats cmd/gitlab-stats/*go
 
   test:
     desc: "Run tests"

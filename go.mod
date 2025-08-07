@@ -9,9 +9,9 @@ require (
 	github.com/go-analyze/charts v0.5.15
 	github.com/golang-module/carbon/v2 v2.6.9
 	github.com/google/go-cmp v0.7.0
-	github.com/mattn/go-sqlite3 v1.14.30
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/ini.v1 v1.67.0
+	modernc.org/sqlite v1.34.5
 )
 
 require (
@@ -34,7 +34,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pganalyze/pg_query_go/v5 v5.1.0 // indirect
@@ -72,5 +71,4 @@ require (
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
-	modernc.org/sqlite v1.34.5 // indirect
 )

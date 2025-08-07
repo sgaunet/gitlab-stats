@@ -4,8 +4,7 @@ import (
 	"os"
 	"testing"
 
-	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	"github.com/sgaunet/gitlab-stats/pkg/storage/sqlite"
 )
 

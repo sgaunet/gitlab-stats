@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/amacneil/dbmate/v2/pkg/dbmate"
-	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite" // SQLite driver for dbmate
 	"github.com/golang-module/carbon/v2"
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "modernc.org/sqlite" // SQLite driver
 	"github.com/sgaunet/gitlab-stats/internal/database"
+	// Import our custom dbmate driver (registers itself in init())
 )
 
 //go:embed db/migrations/*.sql
@@ -30,7 +30,7 @@ type Storage struct {
 
 // NewStorage creates a new SQLite storage instance.
 func NewStorage(dbFile string) (*Storage, error) {
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open("sqlite", dbFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -57,7 +57,7 @@ func (s *Storage) Close() error {
 
 // Init initializes the database with migrations.
 func (s *Storage) Init() error {
-	u, _ := url.Parse("sqlite3://" + s.dbFile)
+	u, _ := url.Parse("sqlite://" + s.dbFile)
 	db := dbmate.New(u)
 	db.FS = fs
 
