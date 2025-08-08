@@ -171,6 +171,18 @@ func generateGraph(s *sqlite.Storage, cfg config) {
 		os.Exit(1)
 	}
 	
+	// Check if there's any data to generate a chart
+	if enhancedStats == nil || len(enhancedStats.DateExecSeries) == 0 {
+		entityType := "project"
+		entityID := cfg.projectID
+		if cfg.groupID != 0 {
+			entityType = "group"
+			entityID = cfg.groupID
+		}
+		logrus.Errorf("No data found in database for %s ID %d. Please collect statistics first before generating a chart.", entityType, entityID)
+		os.Exit(1)
+	}
+	
 	err = graphissues.CreateEnhancedGraph(
 		cfg.graphFilePath, 
 		enhancedStats.TotalOpenedSeries,
