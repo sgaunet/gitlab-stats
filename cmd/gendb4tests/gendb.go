@@ -56,15 +56,18 @@ func initStorage(dbFile string) *sqlite.Storage {
 
 func generateFakeData(s *sqlite.Storage, cfg config) {
 	const monthsBack = 12
+	const maxIssueIncrement = 10
 	dbegin := carbon.Now().SubMonths(monthsBack).StartOfMonth()
 	dend := carbon.Now().StartOfMonth()
 
-	openIssues := 20
-	closedIssues := 10
+	const initialOpenIssues = 20
+	const initialClosedIssues = 10
+	openIssues := initialOpenIssues
+	closedIssues := initialClosedIssues
 
 	for dbegin.Compare("<", dend) {
-		openIssues += rand.Intn(10)
-		closedIssues += rand.Intn(10)
+		openIssues += rand.Intn(maxIssueIncrement)   //nolint:gosec // This is test data generation, not security-sensitive
+		closedIssues += rand.Intn(maxIssueIncrement) //nolint:gosec // This is test data generation, not security-sensitive
 		fmt.Printf("openIssues: %d, closedIssues: %d\n", openIssues, closedIssues)
 		allIssues := openIssues + closedIssues
 

@@ -9,6 +9,7 @@ linters:
 
   disable:
     - wsl
+    - wsl_v5
     - nlreturn
     - depguard
     - gochecknoinits
@@ -17,6 +18,7 @@ linters:
     - varnamelen
     - exhaustruct
     - tagliatelle
+    - noinlineerr
   exclusions:
     paths-except:
       - cmd/gendb4tests

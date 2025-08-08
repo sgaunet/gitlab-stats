@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/golang-module/carbon/v2"
 	"github.com/sgaunet/gitlab-stats/pkg/gitlab"
@@ -85,6 +86,17 @@ func setupEnvironment() {
 	if len(os.Getenv("GITLAB_URI")) == 0 {
 		if err := os.Setenv("GITLAB_URI", "https://gitlab.com"); err != nil {
 			logrus.Warnf("Failed to set GITLAB_URI: %v", err)
+		}
+	}
+}
+
+func ensureDataDirectory() {
+	dataDir := filepath.Join(os.Getenv("HOME"), ".gitlab-stats")
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		logrus.Infof("Creating data directory: %s", dataDir)
+		if err := os.MkdirAll(dataDir, 0755); err != nil {
+			logrus.Errorf("Failed to create data directory: %v", err)
+			os.Exit(1)
 		}
 	}
 }
@@ -217,6 +229,7 @@ func main() {
 	cfg := parseAndValidateFlags()
 	initTrace(cfg.debugLevel)
 	setupEnvironment()
+	ensureDataDirectory()
 	detectProjectIfNeeded(&cfg)
 	
 	s := initializeDatabase(cfg.dbFile)
