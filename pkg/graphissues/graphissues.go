@@ -72,17 +72,16 @@ func CreateEnhancedGraph(
 	velocitySeries []float64,
 	dateExecSeries []time.Time,
 ) error {
-	labels := make([]string, 0, len(totalOpenedSeries))
-
-	for r := range totalOpenedSeries {
-		labels = append(labels, dateExecSeries[r].Format("2006-01"))
-	}
-	
-	// Validate all series have the same length
+	// Validate all series have the same length BEFORE using them
 	seriesCount := len(totalOpenedSeries)
 	if len(openedDuringPeriod) != seriesCount || len(closedDuringPeriod) != seriesCount || 
 	   len(velocitySeries) != seriesCount || len(dateExecSeries) != seriesCount {
 		return ErrAllSeriesLengthMismatch
+	}
+	
+	labels := make([]string, 0, len(totalOpenedSeries))
+	for r := range totalOpenedSeries {
+		labels = append(labels, dateExecSeries[r].Format("2006-01"))
 	}
 
 	values := [][]float64{

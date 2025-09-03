@@ -270,6 +270,13 @@ func processEnhancedStatsGeneric(
 	dateExecSeries := make([]time.Time, 0, count)
 
 	for i := range totalOpened {
+		// Check date validity first - skip entire data point if date is invalid
+		dateTime := convertToTime(dateExec[i])
+		if dateTime.IsZero() {
+			// Skip this data point entirely if the date is invalid
+			continue
+		}
+		
 		// Convert interface{} to int64, handling potential nil values
 		totalOpenedVal := convertToInt64(totalOpened[i])
 		currentOpenedVal := convertToInt64(currentOpened[i])
@@ -285,16 +292,12 @@ func processEnhancedStatsGeneric(
 		// velocity = net progress (positive = more closed than opened, negative = backlog growing)
 		velocity := closedInPeriod - openedInPeriod
 
+		// Only append data if we have a valid date
 		totalOpenedSeries = append(totalOpenedSeries, float64(currentOpenedVal))  // Currently open issues
 		openedDuringPeriod = append(openedDuringPeriod, float64(openedInPeriod))
 		closedDuringPeriod = append(closedDuringPeriod, float64(closedInPeriod))
 		velocitySeries = append(velocitySeries, float64(velocity))
-		
-		// Convert date
-		dateTime := convertToTime(dateExec[i])
-		if !dateTime.IsZero() {
-			dateExecSeries = append(dateExecSeries, dateTime.UTC())
-		}
+		dateExecSeries = append(dateExecSeries, dateTime.UTC())
 	}
 
 	return &EnhancedStats{
