@@ -1,5 +1,5 @@
-dist
-.task
+/dist
+/.task
 /gitlab-stats
 .env
 tests
