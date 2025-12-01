@@ -14,7 +14,7 @@ tasks:
     cmds:
       - task -a
 
-  linter:
+  lint:
     desc: "Run linter"
     cmds:
       - go generate ./...
