@@ -6,7 +6,7 @@ tool github.com/sqlc-dev/sqlc/cmd/sqlc
 
 require (
 	github.com/amacneil/dbmate/v2 v2.29.3
-	github.com/go-analyze/charts v0.5.21
+	github.com/go-analyze/charts v0.5.24
 	github.com/golang-module/carbon/v2 v2.6.9
 	github.com/google/go-cmp v0.7.0
 	github.com/sirupsen/logrus v1.9.4
@@ -23,7 +23,7 @@ require (
 	github.com/dromara/carbon/v2 v2.6.9 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
-	github.com/go-analyze/bulk v0.1.0 // indirect
+	github.com/go-analyze/bulk v0.1.3 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/cel-go v0.22.1 // indirect
