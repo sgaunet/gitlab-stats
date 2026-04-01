@@ -6,7 +6,7 @@ tool github.com/sqlc-dev/sqlc/cmd/sqlc
 
 require (
 	github.com/amacneil/dbmate/v2 v2.29.3
-	github.com/go-analyze/charts v0.5.24
+	github.com/go-analyze/charts v0.5.26
 	github.com/golang-module/carbon/v2 v2.6.9
 	github.com/google/go-cmp v0.7.0
 	github.com/sirupsen/logrus v1.9.4
